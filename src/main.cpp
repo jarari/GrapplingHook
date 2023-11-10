@@ -1,5 +1,6 @@
 #include "Utilities.h"
 #include "MathUtils.h"
+#define HAVOKtoFO4 69.99124f
 using namespace RE;
 using std::unordered_map;
 
@@ -89,15 +90,24 @@ public:
 									if (a->currentProcess && a->currentProcess->middleHigh) {
 										NiPointer<bhkCharacterController> con = a->currentProcess->middleHigh->charController;
 										if (con.get()) {
-											NiPoint3 dir = Normalize(this->data.location - a->data.location - NiPoint3(0, 0, 60.f));
-											float curSpeed = DotProduct(dir, con->velocityMod);
-											float maxSpeed = 350.f;
+											NiPoint3 dir = this->data.location - a->data.location - NiPoint3(0, 0, 80.f);
+											dir.z = max(0, dir.z);
+											NiPoint3 dirNorm = Normalize(dir);
+											NiPoint3 velMod = con->initialVelocity;
+											float curSpeed = DotProduct(dirNorm, velMod);
+											float maxSpeed = 500.f;
+											typedef void (*AddVelocity)(std::monostate, Actor*, float, float, float);
+											NiPoint3 finalVel = NiPoint3();
+											AddVelocity fnAddVelocity = (AddVelocity)GetProcAddress(hAVF, "AddVelocity");
 											if (curSpeed < maxSpeed) {
-												float accel = min(maxSpeed - curSpeed, 250.f);
-												float accelZ = min(maxSpeed - curSpeed, 75.f);
-												typedef void (*AddVelocity)(std::monostate, Actor*, float, float, float);
-												AddVelocity fnAddVelocity = (AddVelocity)GetProcAddress(hAVF, "AddVelocity");
-												fnAddVelocity(std::monostate{}, a, dir.x * accel, dir.y * accel, max(0, dir.z * accelZ));
+												float accel = min(maxSpeed - curSpeed, 300.f);
+												if (velMod.z < 5) {
+													finalVel = finalVel + NiPoint3(0, 0, dirNorm.z * accel);
+												}
+												finalVel = finalVel + NiPoint3(dirNorm.x * accel, dirNorm.y * accel, 0);
+											}
+											if (Length(finalVel) > 0) {
+												fnAddVelocity(std::monostate{}, a, finalVel.x, finalVel.y, finalVel.z);
 											}
 										}
 									}
