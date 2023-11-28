@@ -1,4 +1,20 @@
 set(SOURCES
 	src/PCH.h
 	src/main.cpp
+	src/Configs.h
+	src/Configs.cpp
+	src/Globals.h
+	src/Globals.cpp
+	src/GrappleManager.h
+	src/GrappleManager.cpp
+	src/Hooks.h
+	src/Hooks.cpp
+	src/InputWatcher.h
+	src/InputWatcher.cpp
+	src/MenuWatcher.h
+	src/MenuWatcher.cpp
+	src/Serialization.h
+	src/Serialization.cpp
+	src/Utils.h
+	src/Utils.cpp
 )
