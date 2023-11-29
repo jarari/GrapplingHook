@@ -5,6 +5,7 @@
 
 uint32_t Configs::keyFireHook = 0;
 float Configs::maxSpeed = 400.f;
+float Configs::maxZSpeed = 70.f;
 float Configs::maxVelocity = 300.f;
 float Configs::maxDistance = 3000.f;
 float Configs::detachDistance = 150.f;
@@ -21,6 +22,7 @@ void Configs::LoadConfigs()
 	SI_Error result = ini.LoadFile(path.c_str());
 	if (result >= 0) {
 		maxSpeed = std::stof(ini.GetValue("Main", "fMaxSpeed", "400.0"));
+		maxZSpeed = std::stof(ini.GetValue("Main", "fMaxZSpeed", "70.0"));
 		maxVelocity = std::stof(ini.GetValue("Main", "fMaxVelocity", "300.0"));
 		maxDistance = std::stof(ini.GetValue("Main", "fMaxDistance", "3000.0"));
 		detachDistance = std::stof(ini.GetValue("Main", "fDetachDistance", "150.0"));

@@ -3,6 +3,7 @@
 namespace Configs {
 	extern uint32_t keyFireHook;
 	extern float maxSpeed;
+	extern float maxZSpeed;
 	extern float maxVelocity;
 	extern float maxDistance;
 	extern float detachDistance;
