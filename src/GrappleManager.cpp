@@ -36,6 +36,7 @@ void GrappleManager::OnHookImpact(RE::Projectile* proj)
 void GrappleManager::OnUpdate(float deltaTime)
 {
 	WriteLocker lock(mapLock);
+	float compensation = *Utils::ptr_deltaTime / 0.03333333f;
 	for (auto& [actorFormID, grappleData] : grappleMap) {
 		RE::Actor* a = RE::TESForm::GetFormByID(actorFormID)->As<RE::Actor>();
 		RE::TESObjectREFR* rope = (RE::TESObjectREFR*)RE::TESForm::GetFormByID(grappleData.ropeRefID);
@@ -88,17 +89,19 @@ void GrappleManager::OnUpdate(float deltaTime)
 								RE::NiPoint3 dirNorm = MathUtils::Normalize(dir);
 								RE::NiPoint3 velMod = con->initialVelocity;
 								float curSpeed = MathUtils::DotProduct(dirNorm, velMod);
-								float maxZSpeed = 20.f;
+								float maxZSpeed = Configs::maxZSpeed * sqrt(compensation);
+								float maxSpeed = Configs::maxSpeed * sqrt(compensation);
+								float maxVelocity = Configs::maxVelocity;
 								typedef void (*AddVelocity)(std::monostate, RE::Actor*, float, float, float);
 								RE::NiPoint3 finalVel = RE::NiPoint3();
 								AddVelocity fnAddVelocity = (AddVelocity)GetProcAddress(hAVF, "AddVelocity");
 								if (!grappleData.requestSync) {
-									if (curSpeed < Configs::maxSpeed) {
-										float accel = min(Configs::maxSpeed - curSpeed, Configs::maxVelocity);
+									if (curSpeed < maxSpeed) {
+										float accel = min(maxSpeed - curSpeed, maxVelocity);
 										finalVel = finalVel + RE::NiPoint3(dirNorm.x * accel, dirNorm.y * accel, 0);
 									}
 									if (velMod.z < maxZSpeed) {
-										finalVel = finalVel + RE::NiPoint3(0, 0, min(dirNorm.z * Configs::maxVelocity, maxZSpeed - velMod.z));
+										finalVel = finalVel + RE::NiPoint3(0, 0, min(dirNorm.z * maxVelocity, maxZSpeed - velMod.z));
 									}
 									if (MathUtils::Length(finalVel) > 0) {
 										fnAddVelocity(std::monostate{}, a, finalVel.x, finalVel.y, finalVel.z);
