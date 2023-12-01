@@ -72,7 +72,7 @@ void GrappleManager::OnUpdate(float deltaTime)
 			}
 			RE::NiPoint3 newPos = Utils::GetProjectileNode(a, Globals::pcam);
 			if (con.get()) {
-				newPos = newPos + con->velocityMod;
+				newPos = newPos + con->outVelocity;
 			}
 			Utils::MoveBendableSpline(rope, newPos, endPos, a->parentCell, a->parentCell->worldSpace);
 
