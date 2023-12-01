@@ -42,7 +42,8 @@ void GrappleManager::OnUpdate(float deltaTime)
 		RE::TESObjectREFR* rope = (RE::TESObjectREFR*)RE::TESForm::GetFormByID(grappleData.ropeRefID);
 		RE::Projectile* proj = (RE::Projectile*)RE::TESForm::GetFormByID(grappleData.projRefID);
 		RE::Actor* target = (RE::Actor*)RE::TESForm::GetFormByID(grappleData.targetRefID);
-		if (a && (proj || (target && target->Get3D()))) {
+		if (a && a->currentProcess && a->currentProcess->middleHigh && (proj || (target && target->Get3D()))) {
+			RE::NiPointer<RE::bhkCharacterController> con = a->currentProcess->middleHigh->charController;
 			if (grappleData.timeLeft < 0) {
 				lock.unlock();
 				DestroyGrapple(a);
@@ -70,6 +71,9 @@ void GrappleManager::OnUpdate(float deltaTime)
 				continue;
 			}
 			RE::NiPoint3 newPos = Utils::GetProjectileNode(a, Globals::pcam);
+			if (con.get()) {
+				newPos = newPos + con->velocityMod;
+			}
 			Utils::MoveBendableSpline(rope, newPos, endPos, a->parentCell, a->parentCell->worldSpace);
 
 			if (grappleData.pulling) {
@@ -81,38 +85,33 @@ void GrappleManager::OnUpdate(float deltaTime)
 				} else {
 					HMODULE hAVF = GetModuleHandleA("ActorVelocityFramework.dll");
 					if (hAVF) {
-						if (a->currentProcess && a->currentProcess->middleHigh) {
-							RE::NiPointer<RE::bhkCharacterController> con = a->currentProcess->middleHigh->charController;
-							if (con.get()) {
-								RE::NiPoint3 dir = endPos - a->data.location - RE::NiPoint3(0, 0, 80.f);
-								dir.z = max(0, dir.z);
-								RE::NiPoint3 dirNorm = MathUtils::Normalize(dir);
-								RE::NiPoint3 velMod = con->initialVelocity;
-								float curSpeed = MathUtils::DotProduct(dirNorm, velMod);
-								float maxZSpeed = Configs::maxZSpeed * sqrt(compensation);
-								float maxSpeed = Configs::maxSpeed * sqrt(compensation);
-								float maxVelocity = Configs::maxVelocity;
-								typedef void (*AddVelocity)(std::monostate, RE::Actor*, float, float, float);
-								RE::NiPoint3 finalVel = RE::NiPoint3();
-								AddVelocity fnAddVelocity = (AddVelocity)GetProcAddress(hAVF, "AddVelocity");
-								if (!grappleData.requestSync) {
-									if (curSpeed < maxSpeed) {
-										float accel = min(maxSpeed - curSpeed, maxVelocity);
-										finalVel = finalVel + RE::NiPoint3(dirNorm.x * accel, dirNorm.y * accel, 0);
-									}
-									if (velMod.z < maxZSpeed) {
-										finalVel = finalVel + RE::NiPoint3(0, 0, min(dirNorm.z * maxVelocity, maxZSpeed - velMod.z));
-									}
-									if (MathUtils::Length(finalVel) > 0) {
-										fnAddVelocity(std::monostate{}, a, finalVel.x, finalVel.y, finalVel.z);
-									}
-									grappleData.velocity = velMod + finalVel;
-								} else {
-									finalVel = grappleData.velocity - velMod;
-									fnAddVelocity(std::monostate{}, a, finalVel.x, finalVel.y, finalVel.z);
-									grappleData.requestSync = false;
-								}
+						RE::NiPoint3 dir = endPos - a->data.location - RE::NiPoint3(0, 0, 80.f);
+						dir.z = max(0, dir.z);
+						RE::NiPoint3 dirNorm = MathUtils::Normalize(dir);
+						RE::NiPoint3 velMod = con->initialVelocity;
+						float curSpeed = MathUtils::DotProduct(dirNorm, velMod);
+						float maxZSpeed = Configs::maxZSpeed * sqrt(compensation);
+						float maxSpeed = Configs::maxSpeed * sqrt(compensation);
+						float maxVelocity = Configs::maxVelocity;
+						typedef void (*AddVelocity)(std::monostate, RE::Actor*, float, float, float);
+						RE::NiPoint3 finalVel = RE::NiPoint3();
+						AddVelocity fnAddVelocity = (AddVelocity)GetProcAddress(hAVF, "AddVelocity");
+						if (!grappleData.requestSync) {
+							if (curSpeed < maxSpeed) {
+								float accel = min(maxSpeed - curSpeed, maxVelocity);
+								finalVel = finalVel + RE::NiPoint3(dirNorm.x * accel, dirNorm.y * accel, 0);
 							}
+							if (velMod.z < maxZSpeed) {
+								finalVel = finalVel + RE::NiPoint3(0, 0, min(dirNorm.z * maxVelocity, maxZSpeed - velMod.z));
+							}
+							if (MathUtils::Length(finalVel) > 0) {
+								fnAddVelocity(std::monostate{}, a, finalVel.x, finalVel.y, finalVel.z);
+							}
+							grappleData.velocity = velMod + finalVel;
+						} else {
+							finalVel = grappleData.velocity - velMod;
+							fnAddVelocity(std::monostate{}, a, finalVel.x, finalVel.y, finalVel.z);
+							grappleData.requestSync = false;
 						}
 					}
 				}
