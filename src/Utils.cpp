@@ -46,7 +46,7 @@ void Utils::MoveBendableSpline(RE::TESObjectREFR* rope, RE::NiPoint3 start, RE::
 	rope->extraList->SetBendableSplineInfo(&thickness, &slack, &offset);
 
 	if (useQueue) {
-		queue->QueueRebuildBendableSpline(rope, true, nullptr);
+		queue->QueueRebuildBendableSpline(*rope, true, nullptr);
 	} else {
 		rope->RebuildBendableSpline(false, nullptr);
 	}
