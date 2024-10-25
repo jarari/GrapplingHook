@@ -10,12 +10,31 @@ RE::TESForm* Utils::GetFormFromMod(std::string modname, uint32_t formid) {
 	return RE::TESDataHandler::GetSingleton()->LookupForm(formid, modname);
 }
 
-RE::NiPoint3 Utils::GetProjectileNode(RE::Actor* a, RE::PlayerCamera* pcam)
+RE::NiPoint3 Utils::GetAttachPointNode(RE::Actor* a, RE::PlayerCamera* pcam, uint32_t attachPoint)
 {
 	if (a && a->Get3D()) {
-		RE::NiNode* endPoint = (RE::NiNode*)a->Get3D()->GetObjectByName("ProjectileNode");
+		RE::NiNode* endPoint = (RE::NiNode*)a->Get3D()->GetObjectByName("_GrapplingHook");
 		if (!endPoint) {
-			endPoint = (RE::NiNode*)a->Get3D()->GetObjectByName("Weapon");
+			switch (attachPoint) {
+			case 0:
+				endPoint = (RE::NiNode*)a->Get3D()->GetObjectByName("ProjectileNode");
+				if (!endPoint) {
+					endPoint = (RE::NiNode*)a->Get3D()->GetObjectByName("Weapon");
+				}
+				break;
+			case 1:
+				endPoint = (RE::NiNode*)a->Get3D()->GetObjectByName("RArm_Hand");
+				break;
+			case 2:
+				endPoint = (RE::NiNode*)a->Get3D()->GetObjectByName("LArm_Hand");
+				break;
+			case 3:
+				endPoint = (RE::NiNode*)a->Get3D()->GetObjectByName("Pelvis");
+				break;
+			}
+		}
+		if (!endPoint) {
+			endPoint = (RE::NiNode*)a->Get3D();
 		}
 		RE::NiPoint3 newPos = endPoint->world.translate;
 		if (a->Get3D(true) == a->Get3D()) {

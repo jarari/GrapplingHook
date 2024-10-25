@@ -11,6 +11,9 @@ float Configs::maxDistance = 3000.f;
 float Configs::detachDistance = 150.f;
 float Configs::detachSeconds = 5.f;
 float Configs::hookCooldown = 3.f;
+float Configs::ropeThickness = 2.f;
+uint32_t Configs::ropeType = 0;
+uint32_t Configs::ropeAttachPoint = 0;
 
 void Configs::LoadConfigs()
 {
@@ -28,6 +31,9 @@ void Configs::LoadConfigs()
 		detachDistance = std::stof(ini.GetValue("Main", "fDetachDistance", "150.0"));
 		detachSeconds = std::stof(ini.GetValue("Main", "fDetachSeconds", "5.0"));
 		hookCooldown = std::stof(ini.GetValue("Main", "fCooldown", "3.0"));
+		ropeThickness = std::stof(ini.GetValue("Main", "fRopeThickness", "2.0"));
+		ropeType = std::stoi(ini.GetValue("Main", "iRopeType", "0"));
+		ropeAttachPoint = std::stoi(ini.GetValue("Main", "iAttachPoint", "0"));
 	}
 	ini.Reset();
 	std::string hotkeyPath = "Data\\MCM\\Settings\\Keybinds.json";

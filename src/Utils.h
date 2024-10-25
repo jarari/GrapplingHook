@@ -11,7 +11,7 @@ namespace Utils
 	};
 
 	RE::TESForm* GetFormFromMod(std::string modname, uint32_t formid);
-	RE::NiPoint3 GetProjectileNode(RE::Actor* a, RE::PlayerCamera* pcam);
+	RE::NiPoint3 GetAttachPointNode(RE::Actor* a, RE::PlayerCamera* pcam, uint32_t attachPoint);
 	void MoveBendableSpline(RE::TESObjectREFR* rope, RE::NiPoint3 start, RE::NiPoint3 end, RE::TESObjectCELL* cell, RE::TESWorldSpace* world, bool useQueue = true);
 	void MoveRefrToPosition(RE::TESObjectREFR* source, uint32_t* pTargetHandle, RE::TESObjectCELL* parentCell, RE::TESWorldSpace* worldSpace, RE::NiPoint3* position, RE::NiPoint3* rotation);
 	RE::TESObjectREFR* PlaceAtMe_Native(RE::BSScript::IVirtualMachine* vm, uint32_t stackId, RE::TESObjectREFR** target, RE::TESForm* form, int32_t count, bool bForcePersist, bool bInitiallyDisabled, bool bDeleteWhenAble);

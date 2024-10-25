@@ -8,7 +8,7 @@ namespace Globals {
 	extern RE::PlayerCharacter* p;
 	extern RE::PlayerCamera* pcam;
 	extern RE::BGSProjectile* projForm;
-	extern RE::BGSBendableSpline* ropeForm;
+	extern RE::BGSBendableSpline* ropeForm[5];
 	extern RE::BGSSoundDescriptorForm* fireSoundForm;
 	extern RE::SpellItem* expireSpell;
 	extern RE::UI* ui;

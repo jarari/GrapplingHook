@@ -38,11 +38,11 @@ void GrappleManager::OnUpdate(float deltaTime)
 	WriteLocker lock(mapLock);
 	float compensation = *Utils::ptr_deltaTime / 0.03333333f;
 	for (auto& [actorFormID, grappleData] : grappleMap) {
-		RE::Actor* a = RE::TESForm::GetFormByID(actorFormID)->As<RE::Actor>();
+		RE::Actor* a = (RE::Actor*)RE::TESForm::GetFormByID(actorFormID);
 		RE::TESObjectREFR* rope = (RE::TESObjectREFR*)RE::TESForm::GetFormByID(grappleData.ropeRefID);
 		RE::Projectile* proj = (RE::Projectile*)RE::TESForm::GetFormByID(grappleData.projRefID);
 		RE::Actor* target = (RE::Actor*)RE::TESForm::GetFormByID(grappleData.targetRefID);
-		if (a && a->currentProcess && a->currentProcess->middleHigh && (proj || (target && target->Get3D()))) {
+		if (a && a->As<RE::Actor>() && a->currentProcess && a->currentProcess->middleHigh && (proj || (target && target->Get3D()))) {
 			RE::NiPointer<RE::bhkCharacterController> con = a->currentProcess->middleHigh->charController;
 			if (grappleData.timeLeft < 0) {
 				lock.unlock();
@@ -70,7 +70,7 @@ void GrappleManager::OnUpdate(float deltaTime)
 				lock.lock();
 				continue;
 			}
-			RE::NiPoint3 newPos = Utils::GetProjectileNode(a, Globals::pcam);
+			RE::NiPoint3 newPos = Utils::GetAttachPointNode(a, Globals::pcam, Configs::ropeAttachPoint);
 			if (con.get()) {
 				newPos = newPos + con->outVelocity;
 			}
@@ -88,7 +88,7 @@ void GrappleManager::OnUpdate(float deltaTime)
 						RE::NiPoint3 dir = endPos - a->data.location - RE::NiPoint3(0, 0, 80.f);
 						dir.z = max(0, dir.z);
 						RE::NiPoint3 dirNorm = MathUtils::Normalize(dir);
-						RE::NiPoint3 velMod = con->initialVelocity;
+						RE::NiPoint3 velMod = con->outVelocity;
 						float curSpeed = MathUtils::DotProduct(dirNorm, velMod);
 						float maxZSpeed = Configs::maxZSpeed * sqrt(compensation);
 						float maxSpeed = Configs::maxSpeed * sqrt(compensation);
@@ -102,12 +102,12 @@ void GrappleManager::OnUpdate(float deltaTime)
 								finalVel = finalVel + RE::NiPoint3(dirNorm.x * accel, dirNorm.y * accel, 0);
 							}
 							if (velMod.z < maxZSpeed) {
-								finalVel = finalVel + RE::NiPoint3(0, 0, min(dirNorm.z * maxVelocity, maxZSpeed - velMod.z));
+								finalVel = finalVel + RE::NiPoint3(0, 0, min(dirNorm.z * (maxVelocity - velMod.z), maxZSpeed - velMod.z));
 							}
 							if (MathUtils::Length(finalVel) > 0) {
 								fnAddVelocity(std::monostate{}, a, finalVel.x, finalVel.y, finalVel.z);
 							}
-							grappleData.velocity = velMod + finalVel;
+							grappleData.velocity = con->initialVelocity + finalVel;
 						} else {
 							finalVel = grappleData.velocity - velMod;
 							fnAddVelocity(std::monostate{}, a, finalVel.x, finalVel.y, finalVel.z);
@@ -138,11 +138,11 @@ RE::TESObjectREFR* GrappleManager::CreateRope(RE::Actor* a, RE::Projectile* proj
 	RE::TESObjectREFR* rope = nullptr;
 	RE::GameVM* gvm = RE::GameVM::GetSingleton();
 	if (gvm) {
-		rope = Utils::PlaceAtMe_Native(gvm->GetVM().get(), 0, (RE::TESObjectREFR**)&proj, Globals::ropeForm, 1, true, false, false);
+		rope = Utils::PlaceAtMe_Native(gvm->GetVM().get(), 0, (RE::TESObjectREFR**)&proj, Globals::ropeForm[Configs::ropeType], 1, true, false, false);
 		if (rope) {
-			RE::NiPoint3 newPos = Utils::GetProjectileNode(a, Globals::pcam);
+			RE::NiPoint3 newPos = Utils::GetAttachPointNode(a, Globals::pcam, Configs::ropeAttachPoint);
 
-			float thickness = 3.0f;
+			float thickness = Configs::ropeThickness;
 			float slack = 0.01f;
 			rope->extraList->SetBendableSplineInfo(&thickness, &slack);
 

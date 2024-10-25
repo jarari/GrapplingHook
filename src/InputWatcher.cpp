@@ -79,8 +79,10 @@ void InputWatcher::ProcessButtonEvent(RE::ButtonEvent* evn)
 		auto grappleData = gm->grappleMap.find(Globals::p->formID);
 		if (grappleData == gm->grappleMap.end()) {
 			if (gm->PlayerCanGrapple()) {
-				RE::NiPoint3 projPos = Utils::GetProjectileNode(Globals::p, Globals::pcam);
-				RE::ObjectRefHandle ref = RE::TESDataHandler::GetSingleton()->CreateProjectileAtLocation(Globals::projForm, projPos, Globals::p->data.angle, Globals::p->parentCell, Globals::p->parentCell->worldSpace);
+				RE::NiPoint3 attachPos = Utils::GetAttachPointNode(Globals::p, Globals::pcam, Configs::ropeAttachPoint);
+				RE::NiPoint3 dir = MathUtils::Normalize(Globals::p->bulletAutoAim - attachPos);
+				RE::NiPoint3 ang{ -asin(dir.z), 0, atan2(dir.x, dir.y) };
+				RE::ObjectRefHandle ref = RE::TESDataHandler::GetSingleton()->CreateProjectileAtLocation(Globals::projForm, attachPos, ang, Globals::p->parentCell, Globals::p->parentCell->worldSpace);
 				if (ref.get()) {
 					RE::Projectile* proj = ref.get()->As<RE::Projectile>();
 					proj->shooter = Globals::p->GetHandle();
